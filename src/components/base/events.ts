@@ -1,4 +1,7 @@
 // Хорошая практика даже простые типы выносить в алиасы
+
+import { subscribe } from "diagnostics_channel";
+
 // Зато когда захотите поменять это достаточно сделать в одном месте
 type EventName = string | RegExp;
 type Subscriber = Function;
@@ -52,6 +55,10 @@ export class EventEmitter implements IEvents {
      */
     emit<T extends object>(eventName: string, data?: T) {
         this._events.forEach((subscribers, name) => {
+            if (name === '*') subscribers.forEach(callback => callback({
+                eventName,
+                data
+            }));
             if (name instanceof RegExp && name.test(eventName) || name === eventName) {
                 subscribers.forEach(callback => callback(data));
             }

@@ -1,3 +1,4 @@
+import { ApiPostMethods } from "../components/base/api";
 
 
 export interface IItem {
@@ -11,6 +12,7 @@ export interface IItem {
 }
 
 export interface IOrder {
+  id?: UniqueId;
   payment: PaymentType;
   email: Email;
   phone: Phone;
@@ -30,21 +32,28 @@ export interface ICartData {
   total: Price;
   size: number;
   addItem(data: IItem): void;
-  deleteItem(id: string): void;
+  deleteItem(id: UniqueId): void;
+  contains(id: UniqueId): boolean;
 }
 
 export interface IOrderData {
-  cart: ICartData;
-  payment: PaymentType | null;
-  email: Email | null;
-  phone: Phone | null;
-  address: Address | null;
-  getOrderInfo(): IOrder;
-  setOrderInfo(data: TOrderContactInfo | TOrderPaymentInfo): void;
+  order: IOrder;
+  payment: PaymentType;
+  email: Email;
+  phone: Phone;
+  address: Address;
+  total: Price;
+  created: TOrderCreated;
+}
+
+export interface IApi {
+  baseUrl: string;
+  get<T>(url: string): Promise<T>;
+  post<T>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
 }
 
 export type UniqueId = string;
-export type PaymentType = 'online' | 'upon_receipt';
+export type PaymentType = 'card' | 'cash';
 export type Email = string;
 export type Phone = string;
 export type Address = string;
@@ -52,3 +61,5 @@ export type Price = number;
 export type Index = number | null;
 export type TOrderPaymentInfo = Pick<IOrder, 'payment' | 'address'>;
 export type TOrderContactInfo = Pick<IOrder, 'email' | 'phone'>;
+export type TOrderInfo = Pick<IOrder, 'address' | 'email' | 'payment' | 'phone'>;
+export type TOrderCreated = Pick<IOrder, 'id' | 'total'>;
