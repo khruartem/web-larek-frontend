@@ -3,7 +3,29 @@
 import { subscribe } from "diagnostics_channel";
 
 // Зато когда захотите поменять это достаточно сделать в одном месте
-type EventName = string | RegExp;
+export enum eventTypes {
+    ALL = '*',
+    DATA_ITEM_SELECTED = 'item:selected',
+    DATA_ITEM_PREVIEW_CLEAR = 'item:previewClear',
+    DATA_CART_CLEAR = 'cart:clear',
+    DATA_CART_CHANGED = 'cart:changed',
+    DATA_ORDER_CHANGED = 'order:changed',
+    VIEW_MODAL_OPEN = 'modal:open',
+    VIEW_MODAL_CLOSE = 'modal:close',
+    VIEW_ITEM_SELECT = 'item:select',
+    VIEW_ITEM_DELETE = 'item:delete',
+    VIEW_ITEM_ADD = 'item:add',
+    VIEW_CART_OPEN = 'cart:open',
+    VIEW_CART_CHECKOUT = 'cart:checkout',
+    VIEW_ITEMS_LOADED = 'items:loaded',
+    VIEW_ORDER_INPUT = 'order:input',
+    VIEW_CONTACTS_INPUT = 'contacts:input',
+    VIEW_ORDER_SUBMIT = 'order:submit',
+    VIEW_CONTACTS_SUBMIT = 'contacts:submit',
+    VIEW_ORDER_CREATED = 'order:created',
+    VIEW_ALL_RESET = 'all:reset'
+};
+type EventName = eventTypes | string | RegExp;
 type Subscriber = Function;
 type EmitterEvent = {
     eventName: string,
@@ -55,7 +77,7 @@ export class EventEmitter implements IEvents {
      */
     emit<T extends object>(eventName: string, data?: T) {
         this._events.forEach((subscribers, name) => {
-            if (name === '*') subscribers.forEach(callback => callback({
+            if (name === eventTypes.ALL) subscribers.forEach(callback => callback({
                 eventName,
                 data
             }));

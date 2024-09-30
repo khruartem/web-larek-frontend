@@ -93,6 +93,10 @@ export class OrderData implements IOrderData {
     this.events.emit('order:changed');
   }
 
+  get items() {
+    return this._items
+  }
+
   set items(data: UniqueId[]) {
     this._items = data;
     this.events.emit('order:changed');

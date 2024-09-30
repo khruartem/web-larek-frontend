@@ -1,7 +1,7 @@
 import './scss/styles.scss';
 import { API_URL } from './utils/constants';
 import { ItemsData } from './components/ItemsData';
-import { EventEmitter, IEvents } from './components/base/events';
+import { EventEmitter, eventTypes, IEvents } from './components/base/events';
 import { CartData } from './components/CartData';
 import { IApi, IItem, TOrderContactInfo, TOrderCreated, TOrderPaymentInfo } from './types';
 import { OrderData } from './components/OrderData';
@@ -58,7 +58,7 @@ appApi.getItems()
   .catch(err => console.log(err));
 
 // Слушатель события загрузки товаров с сервера
-events.on('items:loaded', (evt: { data: IItem[] }) => {
+events.on(eventTypes.VIEW_ITEMS_LOADED, (evt: { data: IItem[] }) => {
   itemsData.items = evt.data;
   fillCatalog(itemsData, gallery, templateItemGallery);
   itemsCatalog.render({ catalog: gallery });
@@ -66,7 +66,7 @@ events.on('items:loaded', (evt: { data: IItem[] }) => {
 });
 
 // Слушатель события выбора товара
-events.on('item:select', (evt: { item: Item }) => {
+events.on(eventTypes.VIEW_ITEM_SELECT, (evt: { item: Item }) => {
   if (!cartData.contains(evt.item.id)) {
     evt.item.setValid(true);
     evt.item.setButtonTitle();
@@ -74,7 +74,7 @@ events.on('item:select', (evt: { item: Item }) => {
     evt.item.setValid(false);
     evt.item.setButtonTitle('Уже в корзине');
   }
-  
+
   itemsData.preview = evt.item.id;
   const itemPreviewElement = renderItemPreview();
   modal.open(itemPreviewElement);
@@ -82,7 +82,7 @@ events.on('item:select', (evt: { item: Item }) => {
 });
 
 // Слушатель события открытия корзины
-events.on('cart:open', () => {
+events.on(eventTypes.VIEW_CART_OPEN, () => {
   modal.open(cart.render({
     catalog: cartList,
     total: cartData.total.toString(),
@@ -92,7 +92,7 @@ events.on('cart:open', () => {
 });
 
 // Слушатель закрытия модального окна
-events.on('modal:close', () => {
+events.on(eventTypes.VIEW_MODAL_CLOSE, () => {
   if (cartData.size) cart.setValid(true, 'icon');
   else cart.setValid(false, 'icon');
   modal.close();
@@ -100,7 +100,7 @@ events.on('modal:close', () => {
 })
 
 // Слушатель добавления товара в корзину
-events.on('item:add', (evt: { item: Item }) => {
+events.on(eventTypes.VIEW_ITEM_ADD, (evt: { item: Item }) => {
   evt.item.setValid(false);
   evt.item.setButtonTitle('Уже в корзине');
 
@@ -109,13 +109,13 @@ events.on('item:add', (evt: { item: Item }) => {
 
   const itemInstance = new Item(cloneTemplate(templateItemCart), events);
   const itemAdded = cartData.items.find(item => item.id === evt.item.id);
-  
+
   cartList.push(itemInstance.render(itemAdded));
   cart.size = cartData.size.toString();
 })
 
 // Слушатель удаления товара из корзины
-events.on('item:delete', (evt: { item: Item }) => {
+events.on(eventTypes.VIEW_ITEM_DELETE, (evt: { item: Item }) => {
   evt.item.setValid(true);
   evt.item.setButtonTitle();
   cartData.deleteItem(evt.item.id);
@@ -130,7 +130,7 @@ events.on('item:delete', (evt: { item: Item }) => {
 })
 
 // Слушатель перехода к вводу платежной информации заказа
-events.on('cart:checkout', () => {
+events.on(eventTypes.VIEW_CART_CHECKOUT, () => {
   orderData.items = cartData.items.map(item => { return item.id });
   orderData.total = cartData.total;
 
@@ -149,12 +149,12 @@ events.on('cart:checkout', () => {
 })
 
 // Слушатель на инпут на форме ввода данных об оплате
-events.on('order:input', (evt: TOrderPaymentInfo) => {
+events.on(eventTypes.VIEW_ORDER_INPUT, (evt: TOrderPaymentInfo) => {
   handlerInput(evt, formOrder);
 })
 
 // Слушатель сабмита формы ввода данных об оплате
-events.on('order:submit', (evt: TOrderPaymentInfo) => {
+events.on(eventTypes.VIEW_ORDER_SUBMIT, (evt: TOrderPaymentInfo) => {
   orderData.address = evt.address;
   orderData.payment = evt.payment;
 
@@ -169,32 +169,31 @@ events.on('order:submit', (evt: TOrderPaymentInfo) => {
   }
 
   modal.content = formContacts.render();
-}) 
+})
 
 // Слушатель на инпут на форме ввода контактной информации
-events.on('contacts:input', (evt: TOrderContactInfo) => {
+events.on(eventTypes.VIEW_CONTACTS_INPUT, (evt: TOrderContactInfo) => {
   handlerInput(evt, formContacts);
 });
 
 // Слушатель сабмита формы ввода данных об оплате
-events.on('contacts:submit', (evt: TOrderContactInfo) => {
+events.on(eventTypes.VIEW_CONTACTS_SUBMIT, (evt: TOrderContactInfo) => {
   orderData.email = evt.email;
   orderData.phone = evt.phone;
-  if (orderData.isValid) {
-    appApi.createOrder(orderData.order)
-      .then(createdOrder => events.emit(('order:created'), { createdOrder }))
-      .catch(err => formContacts.showErrors(`Ошибка при создании заказа: ${err}`));
-  } else throw new Error('Order has invalid')
+  if (!orderData.isValid()) throw new Error('Order data is invalid');
+  appApi.createOrder(orderData.order)
+    .then(createdOrder => events.emit(('order:created'), { createdOrder }))
+    .catch(err => formContacts.showErrors(`Ошибка при создании заказа: ${err}`));
 })
 
 // Слушатель успешного создания заказа
-events.on('order:created', (evt: { createdOrder: TOrderCreated}) => {
+events.on(eventTypes.VIEW_ORDER_CREATED, (evt: { createdOrder: TOrderCreated }) => {
   modal.open(messageSuccess.render({ description: `Списано ${evt.createdOrder.total} синапсов` }));
   orderData.created = evt.createdOrder;
 })
 
 // Слушатель сброса для создания нового заказа
-events.on('all:reset', () => {
+events.on(eventTypes.VIEW_ALL_RESET, () => {
   cartData.clear();
   orderData.clear();
   cart.size = cartData.size.toString();
