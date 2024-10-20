@@ -92,11 +92,16 @@ events.on(eventTypes.VIEW_CART_OPEN, () => {
 });
 
 // Слушатель закрытия модального окна
-events.on(eventTypes.VIEW_MODAL_CLOSE, () => {
+events.on(eventTypes.VIEW_MODAL_CLOSE, ({ content }: { content: HTMLElement }) => {
   if (cartData.size) cart.setValid(true, 'icon');
   else cart.setValid(false, 'icon');
   modal.close();
   page.unlock();
+  if (itemsData.preview && content.classList.contains('card_full')) {
+    const itemToFocus: HTMLElement = document.getElementById(`${itemsData.preview}`);
+    console.log(itemToFocus);
+    itemToFocus.focus();
+  }
 })
 
 // Слушатель добавления товара в корзину

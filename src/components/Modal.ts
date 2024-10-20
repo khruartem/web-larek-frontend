@@ -15,7 +15,7 @@ export class Modal {
 
     this.modal.addEventListener('click', (evt) => { 
       if(evt.target === this.modal || evt.target === this.closeButton) {
-        this.events.emit('modal:close');
+        this.events.emit('modal:close', { content: this._content });
       }
     });
   }

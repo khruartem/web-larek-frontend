@@ -1,6 +1,5 @@
 import { IItem, Index, Price, UniqueId } from "../types";
 import { CDN_URL } from "../utils/constants";
-import { cloneTemplate } from "../utils/utils";
 import { Component } from "./base/Component";
 import { IEvents } from "./base/events";
 
@@ -57,6 +56,11 @@ export class Item extends Component<IItem> {
 
   protected set id(data: UniqueId) {
     this._id = data;
+    this.container.id = data;
+  }
+
+  get id() {
+    return this._id;
   }
 
   setValid(isValid: boolean): void {
@@ -131,9 +135,5 @@ export class Item extends Component<IItem> {
         this.setValid(false);
       }
     }
-  }
-
-  get id() {
-    return this._id;
   }
 }

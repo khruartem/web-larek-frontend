@@ -38,12 +38,12 @@ export class Form extends Component<IForm> {
       this.cashButton.addEventListener('click', () => {
         this.select(this.cashButton);
         this.unselect(this.cardButton);
-        this.events.emit(`${this.formName}:input`, { ...this.getInputValues() });
+        this.events.emit(`${this.formName}:input`, this.getInputValues());
       });
     }
 
     this.container.addEventListener('input', () => {
-      this.events.emit(`${this.formName}:input`, { ...this.getInputValues() });
+      this.events.emit(`${this.formName}:input`, this.getInputValues());
     });
 
     this.container.addEventListener('submit', (evt) => {
